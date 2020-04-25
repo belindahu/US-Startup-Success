@@ -12,6 +12,8 @@ library(tidyverse)
 library(tidyselect)
 library(readr)
 library(tidycensus)
+library(gt)
+library(scales)
 
 census_api_key("03bf7eeb14e29c5d6fd4073fce357ba84f0017cc")
 
@@ -100,13 +102,39 @@ companies2 <- companies %>%
 
 ```
 
-```{r}
+```{r most prevalent types of startups per state, echo = FALSE}
 
-companies2 %>% 
+top_types <- companies2 %>% 
   filter(! is.na(state_code)) %>% 
   group_by(state_code) %>% 
   count(category, sort = TRUE) %>% 
+  mutate(percent = n/sum(n)) %>% 
   slice(which.max(n))
+
+top_types_table <- top_types %>% 
+  select(-n) %>% 
+  ungroup() %>% 
+  gt() %>% 
+  tab_header(
+    title = "Most Prevalent Startup Categories by State
+",
+    subtitle = "Data from Dec. 4, 2015 Crunchbase Data Report
+"
+  ) %>% 
+  cols_label(
+    state_code = "State",
+    category = "Category",
+    percent = "Prevalence"
+  ) %>% 
+  fmt_percent(
+    columns = vars(percent)
+  ) %>% 
+  cols_align(
+    "center"
+  )
+
+top_types_table
+  
 
 ```
 next steps: 
