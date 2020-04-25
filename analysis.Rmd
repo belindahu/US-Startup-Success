@@ -76,9 +76,12 @@ companies <- read_csv("raw-data/companies.csv",
 
 ## Types of startups by state 
 
-```{r bystate, echo = FALSE}
+```{r tidy, echo = FALSE}
 
-# need to unlist category_code using separate and regex expressions
+# need to unlist category_code using separate and regex expressions separated
+# category list into separate columns, calculated the max number of columns in
+# excel. then used pivot_longer to lengthen the table to make calculating much
+# easier later
  
 companies2 <- companies %>% 
  separate(data = ., 
@@ -94,7 +97,19 @@ companies2 <- companies %>%
     values_to = "category",
     values_drop_na = TRUE
  )
-  
 
 ```
 
+```{r}
+
+companies2 %>% 
+  filter(! is.na(state_code)) %>% 
+  group_by(state_code) %>% 
+  count(category, sort = TRUE) %>% 
+  slice(which.max(n))
+
+```
+next steps: 
+- make a map of most common type of startup by state
+- top 3 types of startups by state
+- make this interactive
