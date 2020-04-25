@@ -1,0 +1,100 @@
+---
+title: "Final Project"
+author: "Belinda Hu"
+date: "4/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidyselect)
+library(readr)
+library(tidycensus)
+
+census_api_key("03bf7eeb14e29c5d6fd4073fce357ba84f0017cc")
+
+```
+
+```{r load crunchbase data, echo = FALSE, message = FALSE}
+
+# loading in companies and deselecting irrelevant rows.
+# using message =  FALSE to get rid of parsing failure
+
+companies <- read_csv("raw-data/companies.csv",
+                      col_types = cols(
+  permalink = col_character(),
+  name = col_character(),
+  homepage_url = col_character(),
+  category_list = col_character(),
+  funding_total_usd = col_character(),
+  status = col_character(),
+  country_code = col_character(),
+  state_code = col_character(),
+  region = col_character(),
+  city = col_character(),
+  funding_rounds = col_double(),
+  founded_at = col_date(format = ""),
+  first_funding_at = col_date(format = ""),
+  last_funding_at = col_date(format = "")
+)) %>% 
+  select(-permalink, -homepage_url) %>% 
+  filter(country_code == "USA")
+
+# loading in acquisitions, row 8141 has an NA for acquired_at
+# 
+# acquisitions <- read_csv("raw-data/acquisitions.csv", 
+#                          col_types = cols(
+#   company_permalink = col_character(),
+#   company_name = col_character(),
+#   company_category_list = col_character(),
+#   company_country_code = col_character(),
+#   company_state_code = col_character(),
+#   company_region = col_character(),
+#   company_city = col_character(),
+#   acquirer_permalink = col_character(),
+#   acquirer_name = col_character(),
+#   acquirer_category_list = col_character(),
+#   acquirer_country_code = col_character(),
+#   acquirer_state_code = col_character(),
+#   acquirer_region = col_character(),
+#   acquirer_city = col_character(),
+#   acquired_at = col_date(format = ""),
+#   acquired_month = col_character(),
+#   price_amount = col_double(),
+#   price_currency_code = col_character()
+# )) %>% 
+#   select(-company_permalink, -acquirer_permalink) 
+# 
+# investments <- read_csv("raw-data/investments.csv") %>% 
+#   select(-company_permalink, -investor_permalink, -funding_round_permalink)
+
+```
+
+# Exploratory Analysis of Data
+
+## Types of startups by state 
+
+```{r bystate, echo = FALSE}
+
+# need to unlist category_code using separate and regex expressions
+ 
+companies2 <- companies %>% 
+ separate(data = ., 
+           col = category_list, 
+           into = c("cat_1", "cat_2", "cat_3","cat_4", "cat_5", "cat_6", "cat_7", "cat_8", "cat_9", "cat_10", "cat_11", "cat_12", "cat_13", "cat_14", "cat_15", "cat_16", "cat_17", "cat_18", "cat_19", "cat_20", "cat_21", "cat_22", "cat_23", "cat_24", "cat_25", "cat_26", "cat_27", "cat_28", "cat_29", "cat_30", "cat_31", "cat_32", "cat_33", "cat_34", "cat_35", "cat_36", "cat_37", "cat_38", "cat_39", "cat_40", "cat_41", "cat_42", "cat_43", "cat_44"),
+           sep = "([\\|])", 
+           extra = "merge", 
+           fill = "right") %>% 
+  pivot_longer(
+    cols = starts_with("cat_"),
+    names_to = "cat_num",
+    names_prefix = "cat_",
+    values_to = "category",
+    values_drop_na = TRUE
+ )
+  
+
+```
+
