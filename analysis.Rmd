@@ -14,6 +14,12 @@ library(readr)
 library(tidycensus)
 library(gt)
 library(scales)
+# library(leaflet)
+# library(maps)
+library(ggplot2)
+library(sf)
+library(date)
+library(gganimate)
 
 census_api_key("03bf7eeb14e29c5d6fd4073fce357ba84f0017cc")
 
@@ -41,7 +47,7 @@ companies <- read_csv("raw-data/companies.csv",
   first_funding_at = col_date(format = ""),
   last_funding_at = col_date(format = "")
 )) %>% 
-  select(-permalink, -homepage_url) %>% 
+  select(-permalink, -homepage_url, -count, -formula) %>% 
   filter(country_code == "USA")
 
 # loading in acquisitions, row 8141 has an NA for acquired_at
@@ -71,6 +77,14 @@ companies <- read_csv("raw-data/companies.csv",
 # 
 # investments <- read_csv("raw-data/investments.csv") %>% 
 #   select(-company_permalink, -investor_permalink, -funding_round_permalink)
+
+# loading in funding, added in a funding year column for future purposes,
+# changed $ to be in terms of ten millions
+
+investments <- read_csv("raw-data/investments.csv") %>% 
+  select(-company_permalink, -investor_permalink, -funding_round_permalink) %>% 
+  mutate(funding_year = as.numeric(format(funded_at, "%Y"))) %>% 
+  mutate(raised_amount_usd = raised_amount_usd/1000000)
 
 ```
 
@@ -102,17 +116,32 @@ companies2 <- companies %>%
 
 ```
 
-```{r most prevalent types of startups per state, echo = FALSE}
+```{r top types table, echo = FALSE}
+
+# need to convert state abbr to name:
+# https://worldpopulationreview.com/states/state-abbreviations/
+
+stateabbr <- read_csv("raw-data/stateabbr.csv")%>% 
+  select(State, Code)
+
+# creating top_types by filtering for all existing state_codes, grouping by
+# state, counting by category, calculating proportion, slicing max for each
+# group, and left_joining with stateabbr. Used na.omit() to get rid of Guam.
 
 top_types <- companies2 %>% 
   filter(! is.na(state_code)) %>% 
   group_by(state_code) %>% 
   count(category, sort = TRUE) %>% 
   mutate(percent = n/sum(n)) %>% 
-  slice(which.max(n))
+  slice(which.max(n)) %>% 
+  left_join(stateabbr,
+            by = c("state_code" = "Code")) %>% 
+  na.omit()
+
+# creating a gt table of top_types
 
 top_types_table <- top_types %>% 
-  select(-n) %>% 
+  select(category, percent, State) %>% 
   ungroup() %>% 
   gt() %>% 
   tab_header(
@@ -121,8 +150,12 @@ top_types_table <- top_types %>%
     subtitle = "Data from Dec. 4, 2015 Crunchbase Data Report
 "
   ) %>% 
+  cols_move_to_start(
+    columns = vars(state_code, State)
+  ) %>% 
   cols_label(
-    state_code = "State",
+    state_code = "State Code",
+    State = "State",
     category = "Category",
     percent = "Prevalence"
   ) %>% 
@@ -137,6 +170,93 @@ top_types_table
   
 
 ```
+
+```{r top types map, echo = FALSE, options(tigris_use_cache = TRUE)}
+
+# mapStates = map("state", fill = TRUE, plot = FALSE)
+# 
+# leaflet(data = mapStates) %>% 
+#   addTiles() %>%
+#   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>% 
+
+income <- get_acs(geography = "state",
+                        variables = "B19013_001",
+                        year = 2015,
+                        geometry = TRUE) 
+
+pop <- get_acs(geography = "state",
+                        variables = "B02001_001",
+                        year = 2015,
+                        geometry = TRUE) 
+
+
+```
+
+# Visualizing Investments
+
+## total investments over the years
+
+```{r investments over the year, echo = FALSE}
+
+# using na.rm = T so that R discounts NA's
+
+log_over_time <- investments %>% 
+  group_by(funding_year) %>% 
+  summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
+  ggplot(., aes(x = funding_year, y = total/10)) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  scale_y_log10(labels = trans_format("log10", math_format(10^.x))) +
+  labs(title = "Total Investments Over Time",
+       subtitle = "Data from Dec. 4, 2015 Crunchbase Data Report",
+       x = "Year", 
+       y = "10 Million USD") +
+  transition_reveal(funding_year)
+
+log_over_time
+
+total_over_time <- investments %>% 
+  group_by(funding_year) %>% 
+  summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
+  ggplot(., aes(x = funding_year, y = total)) +
+  geom_point() +
+  geom_line() +
+  theme_classic() +
+  labs(title = "Total Investments Over Time",
+       subtitle = "Data from Dec. 4, 2015 Crunchbase Data Report",
+       x = "Year", 
+       y = "Million USD") +
+  transition_reveal(funding_year)
+
+```
+
+## investments by type over the years
+
+```{r data wrangling, echo = FALSE}
+
+# did some analysis in excel - max number of categories is 23
+
+investments %>% 
+  separate(data = ., 
+           col = company_category_list, 
+           into = c("cat_1", "cat_2", "cat_3","cat_4", "cat_5", "cat_6", "cat_7", "cat_8", "cat_9", "cat_10", "cat_11", "cat_12", "cat_13", "cat_14", "cat_15", "cat_16", "cat_17", "cat_18", "cat_19", "cat_20", "cat_21", "cat_22", "cat_23"),
+           sep = "([\\|])", 
+           extra = "merge", 
+           fill = "right") %>% 
+  pivot_longer(
+    cols = starts_with("cat_"),
+    names_to = "cat_num",
+    names_prefix = "cat_",
+    values_to = "category",
+    values_drop_na = TRUE
+ ) %>% 
+  group_by(funding_year, category) %>% 
+  summarise(total = sum(raised_amount_usd, na.rm = T))
+  
+
+```
+
 next steps: 
 - make a map of most common type of startup by state
 - top 3 types of startups by state
