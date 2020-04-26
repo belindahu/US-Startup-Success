@@ -74,9 +74,6 @@ companies <- read_csv("raw-data/companies.csv",
 #   price_currency_code = col_character()
 # )) %>% 
 #   select(-company_permalink, -acquirer_permalink) 
-# 
-# investments <- read_csv("raw-data/investments.csv") %>% 
-#   select(-company_permalink, -investor_permalink, -funding_round_permalink)
 
 # loading in funding, added in a funding year column for future purposes,
 # changed $ to be in terms of ten millions
@@ -201,6 +198,7 @@ pop <- get_acs(geography = "state",
 # using na.rm = T so that R discounts NA's
 
 log_over_time <- investments %>% 
+  filter(country_code == "USA") %>% 
   group_by(funding_year) %>% 
   summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
   ggplot(., aes(x = funding_year, y = total/10)) +
@@ -238,7 +236,7 @@ log_over_time
 # did some analysis in excel - max number of categories is 23. grouped by
 # funding year and category, sorted for top 5 funded startup types.
 
-top_funded <- investments %>% 
+investments2 <- investments %>% 
   filter(! is.na(raised_amount_usd)) %>% 
   separate(data = ., 
            col = company_category_list, 
@@ -257,7 +255,7 @@ top_funded <- investments %>%
 # finding top ten funded categories, using this as a list to filter within
 # top_funded dataset
 
-ten <- top_funded %>% 
+top_ten <- investments2 %>% 
   group_by(category) %>% 
   summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
   arrange(desc(total)) %>% 
@@ -267,15 +265,15 @@ ten <- top_funded %>%
 # making a line graph to show how they change over time. 
 # using a log y scale
 
-log_top_funded <- top_funded %>% 
+log_top_funded <- investments2 %>% 
   group_by(funding_year, category) %>% 
   summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
-  filter(category %in% ten$category[1:9]) %>%
+  filter(category %in% top_ten$category[1:9]) %>%
   ggplot(., aes(x = funding_year, y = total, color = category)) +
   facet_wrap(~category) +
   geom_point(show.legend = FALSE) +
   geom_line(show.legend = FALSE) +
-  labs(title = "Investments Over Time for Top-Funded Industry, 1979 - 2015",
+  labs(title = "Worldwide Investments Over Time for Top-Funded Industry, 1979 - 2015",
        subtitle = "Using a log y scale",
        x = "Year",
        y = "Funding (Million USD)") + 
@@ -283,15 +281,15 @@ log_top_funded <- top_funded %>%
   
 # regular y axis scale 
 
-reg_top_funded <- top_funded %>% 
+reg_top_funded <- investments2 %>% 
   group_by(funding_year, category) %>% 
   summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
-  filter(category %in% ten$category[1:9]) %>%
+  filter(category %in% top_ten$category[1:9]) %>%
   ggplot(., aes(x = funding_year, y = total, color = category)) +
   facet_wrap(~category) +
   geom_point(show.legend = FALSE) +
   geom_line(show.legend = FALSE) +
-  labs(title = "Investments Over Time for Top-Funded Industry, 1979 - 2015",
+  labs(title = "Worldwide Investments Over Time for Top-Funded Industry, 1979 - 2015",
        subtitle = "Using a regular y scale",
        x = "Year",
        y = "Funding (Million USD)") 
@@ -336,6 +334,85 @@ log_top_funded + transition_reveal(funding_year)
 
 # Looking into trends 
 
+## top cities for funding by top 9-funded industries
+
+```{r}
+
+# filtering for top 10 cities with most company funding in US for top 4 industries
+
+biotech_cities <- investments2 %>% 
+  filter(category == "Biotechnology") %>%
+  filter(! is.na(company_city)) %>% 
+  filter(company_country_code == "USA") %>% 
+  select(raised_amount_usd, company_city, company_state_code) %>% 
+  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+  group_by(company_city) %>% 
+  summarise(total = sum(raised_amount_usd)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  ggplot(., aes(x = total, y = fct_reorder(company_city, total))) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Top 10 US Cities for Biotechnology Funding, until 2015", 
+       subtitle = "Based off of company location",
+       x = "Total Funding (Million USD)",
+       y = "Company Cities")
+
+software_cities <- investments2 %>% 
+  filter(category == "Software") %>%
+  filter(! is.na(company_city)) %>% 
+  filter(company_country_code == "USA") %>% 
+  select(raised_amount_usd, company_city, company_state_code) %>% 
+  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+  group_by(company_city) %>% 
+  summarise(total = sum(raised_amount_usd)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  ggplot(., aes(x = total, y = fct_reorder(company_city, total))) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Top 10 US Cities for Software Funding, until 2015", 
+       subtitle = "Based off of company location",
+       x = "Total Funding (Million USD)",
+       y = "Company Cities")
+
+ecom_cities <- investments2 %>% 
+  filter(category == "E-Commerce") %>%
+  filter(! is.na(company_city)) %>% 
+  filter(company_country_code == "USA") %>% 
+  select(raised_amount_usd, company_city, company_state_code) %>% 
+  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+  group_by(company_city) %>% 
+  summarise(total = sum(raised_amount_usd)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  ggplot(., aes(x = total, y = fct_reorder(company_city, total))) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Top 10 US Cities for E-Commerce Funding, until 2015", 
+       subtitle = "Based off of company location",
+       x = "Total Funding (Million USD)",
+       y = "Company Cities")
+
+mobile_cities <- investments2 %>% 
+  filter(category == "Mobile") %>%
+  filter(! is.na(company_city)) %>% 
+  filter(company_country_code == "USA") %>% 
+  select(raised_amount_usd, company_city, company_state_code) %>% 
+  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+  group_by(company_city) %>% 
+  summarise(total = sum(raised_amount_usd)) %>% 
+  arrange(desc(total)) %>% 
+  head(10) %>% 
+  ggplot(., aes(x = total, y = fct_reorder(company_city, total))) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Top 10 US Cities for Mobile Funding, until 2015", 
+       subtitle = "Based off of company location",
+       x = "Total Funding (Million USD)",
+       y = "Company Cities")
+
+```
 
 
 next steps: 
@@ -346,3 +423,9 @@ next steps:
 todo:
 - investments over time: fix y axis
 - investments over time by industry: fix y axis
+- worldwide vs. in the US
+- total funding in cities vs. income
+  - do this by industry
+- choose top 4 cities
+- reformat axes
+- add in states
