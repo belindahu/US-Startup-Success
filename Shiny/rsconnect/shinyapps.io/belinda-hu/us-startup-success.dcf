@@ -1,0 +1,12 @@
+name: us-startup-success
+title:
+username:
+account: belinda-hu
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2192227
+bundleId: 3069926
+url: https://belinda-hu.shinyapps.io/us-startup-success/
+when: 1587961545.86001
+asMultiple: FALSE
+asStatic: FALSE
