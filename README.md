@@ -8,3 +8,5 @@ Data credits:<br/>
 [Dec 4, 2015 Crunchbase Data Export](https://github.com/notpeter/crunchbase-data)<br/>
 [Colleges and Universities](https://hifld-geoplatform.opendata.arcgis.com/datasets/colleges-and-universities/data)<br/>
 [State Abbreviations](https://worldpopulationreview.com/states/state-abbreviations/)
+
+Note: One of the csv files (investments.csv) was too large to commit to this repo. However, it is available at the link in the data credits.
