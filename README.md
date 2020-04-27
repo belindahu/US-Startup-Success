@@ -4,7 +4,7 @@ This project looks to understand factors that influence whether a startup is fou
 
 https://belinda-hu.shinyapps.io/us-startup-success/
 
-Data credits:
+Data credits:<br/>
 [Dec 4, 2015 Crunchbase Data Export](https://github.com/notpeter/crunchbase-data)<br/>
 [Colleges and Universities](https://hifld-geoplatform.opendata.arcgis.com/datasets/colleges-and-universities/data)<br/>
 [State Abbreviations](https://worldpopulationreview.com/states/state-abbreviations/)
