@@ -184,6 +184,8 @@ tabPanel("About",
          p("I obtained data on US higher educational institutions from the US Department of Homeland Security
            here: https://hifld-geoplatform.opendata.arcgis.com/datasets/colleges-and-universities/data. I 
            cleaned up extraneous columns in excel before loading into R.", align = "center"),
+         p("I also used a dataset from World Population Review to convert state abbreviations to names: https://worldpopulationreview.com/states/state-abbreviations/", 
+           align = "center"),
          h3("Methodology",
             align = "center"),
          p("Much of my work went into organizing the data to make the visualization easier. Specifically, I had to separate and rejoin
