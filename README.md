@@ -1,4 +1,4 @@
-# Factors of Success in US Startups
+# Factors of Success for US Startups
 
 This project looks to understand factors that influence whether a startup is founded and the funding it receives by analyzing Crunchbase startup data up from 1977 - 2015 and college/university data from the US Department of Homeland Security.
 
