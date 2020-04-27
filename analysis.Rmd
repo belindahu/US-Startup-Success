@@ -14,8 +14,6 @@ library(readr)
 library(tidycensus)
 library(gt)
 library(scales)
-# library(leaflet)
-# library(maps)
 library(ggplot2)
 library(sf)
 library(date)
@@ -51,31 +49,6 @@ companies <- read_csv("raw-data/companies.csv",
 )) %>% 
   select(-permalink, -homepage_url, -count, -formula) %>% 
   filter(country_code == "USA")
-
-# loading in acquisitions, row 8141 has an NA for acquired_at
-# 
-# acquisitions <- read_csv("raw-data/acquisitions.csv", 
-#                          col_types = cols(
-#   company_permalink = col_character(),
-#   company_name = col_character(),
-#   company_category_list = col_character(),
-#   company_country_code = col_character(),
-#   company_state_code = col_character(),
-#   company_region = col_character(),
-#   company_city = col_character(),
-#   acquirer_permalink = col_character(),
-#   acquirer_name = col_character(),
-#   acquirer_category_list = col_character(),
-#   acquirer_country_code = col_character(),
-#   acquirer_state_code = col_character(),
-#   acquirer_region = col_character(),
-#   acquirer_city = col_character(),
-#   acquired_at = col_date(format = ""),
-#   acquired_month = col_character(),
-#   price_amount = col_double(),
-#   price_currency_code = col_character()
-# )) %>% 
-#   select(-company_permalink, -acquirer_permalink) 
 
 # loading in funding, added in a funding year column for future purposes,
 # changed $ to be in terms of ten millions
@@ -139,34 +112,34 @@ top_types <- companies2 %>%
 
 # creating a gt table of top_types
 
-top_types_table <- top_types %>% 
-  select(category, percent, State) %>% 
-  ungroup() %>% 
-  gt() %>% 
-  tab_header(
-    title = "Most Prevalent Startup Categories by State",
-    subtitle = "Startups can have multiple categories"
-  ) %>% 
-  cols_move_to_start(
-    columns = vars(state_code, State)
-  ) %>% 
-  cols_label(
-    state_code = "State Code",
-    State = "State",
-    category = "Category",
-    percent = "Prevalence"
-  ) %>% 
-  fmt_percent(
-    columns = vars(percent)
-  ) %>% 
-  cols_align(
-    "center"
-  ) %>% 
-  tab_footnote(
-    footnote = "Data from Dec. 4, 2015 Crunchbase Data Report",
-    locations = cells_title("title"))
-
-top_types_table
+# top_types_table <- top_types %>% 
+#   select(category, percent, State) %>% 
+#   ungroup() %>% 
+#   gt() %>% 
+#   tab_header(
+#     title = "Most Prevalent Startup Categories by State",
+#     subtitle = "Startups can have multiple categories"
+#   ) %>% 
+#   cols_move_to_start(
+#     columns = vars(state_code, State)
+#   ) %>% 
+#   cols_label(
+#     state_code = "State Code",
+#     State = "State",
+#     category = "Category",
+#     percent = "Prevalence"
+#   ) %>% 
+#   fmt_percent(
+#     columns = vars(percent)
+#   ) %>% 
+#   cols_align(
+#     "center"
+#   ) %>% 
+#   tab_footnote(
+#     footnote = "Data from Dec. 4, 2015 Crunchbase Data Report",
+#     locations = cells_title("title"))
+# 
+# top_types_table
   
 ```
 
@@ -176,30 +149,30 @@ top_types_table
 
 # Mapping total distribution of startup types in the US
 
-companies2 %>% 
-  group_by(category) %>% 
-  count() %>% 
-  summarise(distr = n/86403) %>% 
-  arrange(desc(distr)) %>% 
-  head(15) %>% 
-  gt() %>% 
-  tab_header(
-    title = "Distribution of Startup Categories Across the US",
-    subtitle = "Startups can have multiple categories"
-  ) %>% 
-  cols_label(
-    category = "Category",
-    distr = "Distribution"
-  ) %>% 
-  fmt_percent(
-    columns = vars(distr)
-  ) %>% 
-  cols_align(
-    "center"
-  ) %>% 
-  tab_footnote(
-    footnote = "Data from Dec. 4, 2015 Crunchbase Data Report",
-    locations = cells_title("title"))
+# companies2 %>% 
+#   group_by(category) %>% 
+#   count() %>% 
+#   summarise(distr = n/86403) %>% 
+#   arrange(desc(distr)) %>% 
+#   head(15) %>% 
+#   gt() %>% 
+#   tab_header(
+#     title = "Distribution of Startup Categories Across the US",
+#     subtitle = "Startups can have multiple categories"
+#   ) %>% 
+#   cols_label(
+#     category = "Category",
+#     distr = "Distribution"
+#   ) %>% 
+#   fmt_percent(
+#     columns = vars(distr)
+#   ) %>% 
+#   cols_align(
+#     "center"
+#   ) %>% 
+#   tab_footnote(
+#     footnote = "Data from Dec. 4, 2015 Crunchbase Data Report",
+#     locations = cells_title("title"))
 
 ```
 
@@ -207,21 +180,16 @@ companies2 %>%
 
 ```{r top types map, echo = FALSE, options(tigris_use_cache = TRUE)}
 
-# mapStates = map("state", fill = TRUE, plot = FALSE)
+
+# income <- get_acs(geography = "state",
+#                         variables = "B19013_001",
+#                         year = 2015,
+#                         geometry = TRUE) 
 # 
-# leaflet(data = mapStates) %>% 
-#   addTiles() %>%
-#   addPolygons(fillColor = topo.colors(10, alpha = NULL), stroke = FALSE) %>% 
-
-income <- get_acs(geography = "state",
-                        variables = "B19013_001",
-                        year = 2015,
-                        geometry = TRUE) 
-
-pop <- get_acs(geography = "state",
-                        variables = "B02001_001",
-                        year = 2015,
-                        geometry = TRUE) 
+# pop <- get_acs(geography = "state",
+#                         variables = "B02001_001",
+#                         year = 2015,
+#                         geometry = TRUE) 
 
 
 ```
@@ -299,11 +267,16 @@ top_ten <- investments2 %>%
   summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
   mutate(total = round(total/1000, digits = 2)) %>% 
   arrange(desc(total)) %>% 
-  head(9) %>% 
+  head(9)
+
+# writing this to shiny to plot top industries
+write_rds(top_ten, path = "Startups/top_ten.rds")
+
+top_ten_gt <- top_ten %>% 
   gt() %>% 
   tab_header(
     title = "Top 9 US Startup Industries by Total Funding",
-    subtitle = ""
+    subtitle = "1979-2015"
   ) %>% 
   cols_label(
     category = "Industry",
@@ -320,11 +293,25 @@ top_ten <- investments2 %>%
 # making a line graph to show how they change over time. 
 # using a log y scale
 
-log_top_funded <- investments2 %>% 
-  group_by(funding_year, category) %>% 
-  summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
-  filter(category %in% top_ten$category[1:9]) %>%
-  ggplot(., aes(x = funding_year, y = total/1000, color = category)) +
+nine_industries <- investments2 %>% 
+  filter(category %in% top_ten$category[1:9]) %>% 
+  mutate(category = as.factor(category)) 
+
+# saving as rds to plot best cities
+
+write_rds(nine_industries, path = "Startups/nine_industries.rds")
+
+ind_funding_over_time <- nine_industries %>% 
+  group_by(category, funding_year) %>% 
+  mutate(total = sum(raised_amount_usd, na.rm = T)) %>% 
+  mutate(total = round(total/1000, digits = 2)) 
+
+# writing this into shiny as well
+
+write_rds(ind_funding_over_time, path = "Startups/ind_funding_over_time.rds")
+
+log_top_funded <- ind_funding_over_time%>% 
+  ggplot(., aes(x = funding_year, y = total, color = category)) +
   facet_wrap(~category) +
   geom_point(show.legend = FALSE) +
   geom_line(show.legend = FALSE) +
@@ -336,11 +323,8 @@ log_top_funded <- investments2 %>%
   
 # regular y axis scale 
 
-reg_top_funded <- investments2 %>% 
-  group_by(funding_year, category) %>% 
-  summarise(total = sum(raised_amount_usd, na.rm = T)) %>% 
-  filter(category %in% top_ten$category[1:9]) %>%
-  ggplot(., aes(x = funding_year, y = total/1000, color = category)) +
+reg_top_funded <- ind_funding_over_time %>%
+  ggplot(., aes(x = funding_year, y = total, color = category)) +
   facet_wrap(~category) +
   geom_point(show.legend = FALSE) +
   geom_line(show.legend = FALSE) +
@@ -354,37 +338,6 @@ reg_top_funded <- investments2 %>%
 reg_top_funded + transition_reveal(funding_year)
 log_top_funded + transition_reveal(funding_year)
 
-  
-  # geom_bar(stat = "identity") +
-  # theme_classic() +
-  # labs(subtitle = "Funding Over Time by Industry", 
-  #      title = "Year: {funding_year}",
-  #      y = "Funding \n (Million USD)",
-  #      x = "Year",
-  #      color = "Category") +
-  # theme(axis.text.x = element_text(angle = 40, hjust = 1)) +
-  #   transition_manual(funding_year) 
-  
-# finding top three funded categories per year
-
-# top_funded %>% 
-#   group_by(funding_year, category) %>% 
-#   summarise(total = sum(raised_amount_usd, na.rm = T)) %>%
-#   group_by(funding_year) %>% 
-#   arrange(desc(total)) %>% 
-#   slice(1:3)
-# 
-# ggplot(top_three_funded, aes(y = category, x = total)) +
-#   geom_bar(stat = "identity") +
-#   scale_x_log10() +
-#   theme_classic() +
-#   labs(title = "Year: {frame_time}",
-#        subtitle = "Most funded categories of startups",
-#        x = "Funding (in Million USD)",
-#        y = "Category") +
-#   transition_time(funding_year) 
-  
-
 ```
 
 # Looking into trends 
@@ -395,178 +348,178 @@ log_top_funded + transition_reveal(funding_year)
 
 # filtering for top 10 cities with most company funding in US for top 4 industries
 
-biotech_cities <- investments2 %>% 
-  filter(category == "Biotechnology") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Biotechnology Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-software_cities <- investments2 %>% 
-  filter(category == "Software") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Software Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-ecom_cities <- investments2 %>% 
-  filter(category == "E-Commerce") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for E-Commerce Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-mobile_cities <- investments2 %>% 
-  filter(category == "Mobile") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Mobile Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-esoft_cities <- investments2 %>% 
-  filter(category == "Enterprise Software") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Enterpise Software Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-health_cities <- investments2 %>% 
-  filter(category == "Health Care") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Health Care Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-cleantech_cities <- investments2 %>% 
-  filter(category == "Clean Technology") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Clean Technology Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-int_cities <- investments2 %>% 
-  filter(category == "Internet") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Internet Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-ad_cities <- investments2 %>% 
-  filter(category == "Advertising") %>%
-  filter(! is.na(company_city)) %>% 
-  filter(company_country_code == "USA") %>% 
-  select(raised_amount_usd, company_city, company_state_code) %>% 
-  mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
-  group_by(company_city) %>% 
-  summarise(total = sum(raised_amount_usd)) %>% 
-  arrange(desc(total)) %>% 
-  head(10) %>% 
-  ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Top 10 US Cities for Advertising Funding, until 2015", 
-       subtitle = "Based off of company location",
-       x = "Total Funding (Billion USD)",
-       y = "Company Cities")
-
-ggsave("biotech_cities.png", plot = biotech_cities, path = "Startups")
-ggsave("software_cities.png", plot = software_cities, path = "Startups")
-ggsave("ecom_cities.png", plot = ecom_cities, path = "Startups")
-ggsave("esoft_cities.png", plot = esoft_cities, path = "Startups")
-ggsave("mobile_cities.png", plot = mobile_cities, path = "Startups")
-ggsave("health_cities.png", plot = health_cities, path = "Startups")
-ggsave("cleantech_cities.png", plot = cleantech_cities, path = "Startups")
-ggsave("int_cities.png", plot = int_cities, path = "Startups")
-ggsave("ad_cities.png", plot = ad_cities, path = "Startups")
+# biotech_cities <- nine_industries %>% 
+#   filter(category == "Biotechnology") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Biotechnology Funding, until 2015",
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
 # 
+# software_cities <- investments2 %>% 
+#   filter(category == "Software") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Software Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# ecom_cities <- investments2 %>% 
+#   filter(category == "E-Commerce") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for E-Commerce Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# mobile_cities <- investments2 %>% 
+#   filter(category == "Mobile") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Mobile Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# esoft_cities <- investments2 %>% 
+#   filter(category == "Enterprise Software") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Enterpise Software Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# health_cities <- investments2 %>% 
+#   filter(category == "Health Care") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Health Care Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# cleantech_cities <- investments2 %>% 
+#   filter(category == "Clean Technology") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Clean Technology Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# int_cities <- investments2 %>% 
+#   filter(category == "Internet") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Internet Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+# 
+# ad_cities <- investments2 %>% 
+#   filter(category == "Advertising") %>%
+#   filter(! is.na(company_city)) %>% 
+#   filter(company_country_code == "USA") %>% 
+#   select(raised_amount_usd, company_city, company_state_code) %>% 
+#   mutate(company_city = paste(company_city, sep = ", ", company_state_code)) %>% 
+#   group_by(company_city) %>% 
+#   summarise(total = sum(raised_amount_usd)) %>% 
+#   arrange(desc(total)) %>% 
+#   head(10) %>% 
+#   ggplot(., aes(x = total/1000, y = fct_reorder(company_city, total))) +
+#   geom_bar(stat = "identity") +
+#   theme_minimal() +
+#   labs(title = "Top 10 US Cities for Advertising Funding, until 2015", 
+#        subtitle = "Based off of company location",
+#        x = "Total Funding (Billion USD)",
+#        y = "Company Cities")
+
+# ggsave("biotech_cities.png", plot = biotech_cities, path = "Startups")
+# ggsave("software_cities.png", plot = software_cities, path = "Startups")
+# ggsave("ecom_cities.png", plot = ecom_cities, path = "Startups")
+# ggsave("esoft_cities.png", plot = esoft_cities, path = "Startups")
+# ggsave("mobile_cities.png", plot = mobile_cities, path = "Startups")
+# ggsave("health_cities.png", plot = health_cities, path = "Startups")
+# ggsave("cleantech_cities.png", plot = cleantech_cities, path = "Startups")
+# ggsave("int_cities.png", plot = int_cities, path = "Startups")
+# ggsave("ad_cities.png", plot = ad_cities, path = "Startups")
+
 # biotech_cities
 # software_cities
 # ecom_cities
@@ -639,6 +592,8 @@ companies_per_state <- companies %>%
             by = c("state_code" = "Code")) %>% 
   filter(!is.na(State)) 
 
+# creating a new dataset by joining with acs data and reorganizing names
+
 full_education <- companies_per_state %>% 
   full_join(hs_education, by = c("State" = "NAME")) %>% 
   select(-variable, -moe, -summary_est, -summary_moe) %>% 
@@ -648,15 +603,19 @@ full_education <- companies_per_state %>%
   rename(ba_estimate = "estimate") %>% 
   mutate(n = as.double(n))
 
-multi_model <- full_education %>% 
-  lm(n ~ hs_estimate + ba_estimate, data = .) 
+# performing multiple regression
 
-multi_model %>% 
+multi_model <- full_education %>% 
+  lm(n ~ hs_estimate + ba_estimate, data = .) %>% 
   tidy(conf.int = TRUE) %>%  
   select(term, estimate, conf.low, conf.high) %>%
-  mutate(estimate = round(estimate, digits = 2), 
-         conf.low = round(conf.low, digits = 2), 
-         conf.high = round(conf.high, digits = 2)) %>% 
+  mutate(estimate = round(estimate, digits = 4), 
+         conf.low = round(conf.low, digits = 4), 
+         conf.high = round(conf.high, digits = 4)) 
+
+# making the gt table
+
+edu_gt <- multi_model %>% 
   gt() %>% 
   tab_header(
     title = "Effect of Educational Attainment on Number of Startups Founded in 2011-2015
@@ -674,23 +633,76 @@ multi_model %>%
     "center"
   )
 
-colleges %>% 
+edu_gt
+
+# organizing college dataset by adding in abbreviations to make  joining with
+# exisitng data easier
+
+full_colleges <- colleges %>% 
   group_by(STATE) %>% 
   count() %>% 
   rename(inst_count = "n") %>% 
   full_join(companies_per_state, by = c("STATE" = "state_code")) %>% 
   filter(! is.na(STATE)) %>% 
-  rename(startup_count = "n") %>% 
-  lm(startup_count ~ inst_count, data = .) 
+  rename(startup_count = "n")
 
+# writing data to shiny
 
-  
+write_rds(full_colleges, path = "Startups/full_colleges.rds")
 
-# running a multi regression
+# creating the regression
 
+inst_model <- full_colleges %>% 
+  lm(startup_count ~ inst_count, data = .) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, conf.low, conf.high) %>%
+  mutate(estimate = round(estimate, digits = 3), 
+         conf.low = round(conf.low, digits = 3), 
+         conf.high = round(conf.high, digits = 3))
 
-# running a regression on amount of total funding a startup has based off of
-# state income
+#gt table
+
+inst_gt <- inst_model %>% 
+  gt() %>% 
+  tab_header(
+    title = "Effect of Number of Higher Level Institutions on Number of Startups Founded in 2011-2015
+",
+    subtitle = "Using College and University Data from US Dept. of Homeland Security
+"
+  ) %>% 
+   cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower bound",
+    conf.high = "Upper bound"
+  ) %>% 
+  cols_align(
+    "center"
+  )
+
+inst_gt
+
+```
+
+## making a ggplot of regressions
+
+```{r visualizing reg, echo = FALSE}
+
+# creating a ggplot of the regression that yielded more results
+
+reg_plot <- full_colleges %>% 
+  na.omit() %>% 
+  ggplot(., aes(x = inst_count, y = startup_count)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship between number of higher instituions and number of new startups",
+       subtitle = "2011-2015, each point represents a state",
+       x = "Number of Higher Institutions",
+       y = "Number of Startups Founded")
+
+# saving as png
+
+ggsave("reg_plot.png", plot = reg_plot, path = "Startups")
 
 ```
 
