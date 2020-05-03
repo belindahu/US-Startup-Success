@@ -20,6 +20,7 @@ nine_industries <- read_rds("nine_industries.rds")
 top_ten <- read_rds("top_ten.rds")
 full_colleges <- read_rds("full_colleges.rds")
 ind_funding_over_time <- read_rds("ind_funding_over_time.rds")
+clean_full_colleges <- read_rds("clean_full_colleges.rds")
 
 
 # Define server logic required to output plots
@@ -46,7 +47,7 @@ server <- function(input, output, session) {
                 facet_wrap(~category) +
                 geom_point(show.legend = FALSE) +
                 geom_line(show.legend = FALSE) +
-                labs(title = "US Investments Over Time for Top-Funded Industries, 1979 - 2015",
+                labs(title = "US Investments Over Time for Top-Funded Industries, 1977 - 2015",
                      subtitle = "Using a normal y scale",
                      x = "Year",
                      y = "Funding (Billion USD)"),
@@ -56,7 +57,7 @@ server <- function(input, output, session) {
                 facet_wrap(~category) +
                 geom_point(show.legend = FALSE) +
                 geom_line(show.legend = FALSE) +
-                labs(title = "US Investments Over Time for Top-Funded Industries, 1979 - 2015",
+                labs(title = "US Investments Over Time for Top-Funded Industries, 1977 - 2015",
                      subtitle = "Using a log y scale",
                      x = "Year",
                      y = "Funding (Billion USD)") + 
@@ -102,7 +103,7 @@ server <- function(input, output, session) {
             gt() %>% 
             tab_header(
                 title = "Top 9 US Startup Industries by Total Funding",
-                subtitle = "1979-2015"
+                subtitle = "1977-2015"
             ) %>% 
             cols_label(
                 category = "Industry",
@@ -147,14 +148,41 @@ server <- function(input, output, session) {
         inst_gt
     })
     
+    output$clean_reg_gt <- render_gt({
+        
+        clean_inst_model <- clean_full_colleges %>% 
+            lm(startup_count ~ inst_count, data = .) %>% 
+            tidy(conf.int = TRUE) %>% 
+            select(term, estimate, conf.low, conf.high) %>%
+            mutate(estimate = round(estimate, digits = 3), 
+                   conf.low = round(conf.low, digits = 3), 
+                   conf.high = round(conf.high, digits = 3))
+        
+        clean_inst_gt <- clean_inst_model %>% 
+            gt() %>% 
+            tab_header(
+                title = "Effect of Number of Higher Level Institutions on Number of New Startups, 2011-2015",
+                subtitle = "Removing Outliers below 5th and above 95th Percentile"
+            ) %>% 
+            cols_label(
+                term = "Variable",
+                estimate = "Estimate",
+                conf.low = "Lower bound",
+                conf.high = "Upper bound"
+            ) %>% 
+            cols_align(
+                "center"
+            )
+    })
+    
     output$reg_plot <- renderImage({
         
         # Return a list containing the filename, alt text, and sizing
         list(src = "reg_plot.png",
              contentType = 'image/png',
              alt = "This is an image",
-             width = 700,
-             height = 700,
+             width = 850,
+             height = 800,
              style = "display: block; margin-left: auto; margin-right: auto;")
     }, deleteFile = FALSE)
     

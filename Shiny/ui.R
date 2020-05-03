@@ -14,6 +14,7 @@ library(date)
 library(gganimate)
 library(skimr)
 library(broom)
+library(shinythemes)
 
 # loading in necessary data
 
@@ -31,9 +32,9 @@ ui <- navbarPage(
     "How Startups Can Thrive in the US",
     
     tabPanel("Introduction",
-             fluidPage(
+             fluidPage(theme = shinytheme("darkly"),
                  titlePanel(
-                     h1("An Overview of Startups from 1979-2015",
+                     h1("An Overview of Startups from 1977-2015",
                         align = "center")
                  ),
                  p("An exploratory analysis using data from Crunchbase to better understand 
@@ -67,7 +68,7 @@ ui <- navbarPage(
                      ),
                      br(),
                      column(5, 
-                            p("Here, we can see the oscillations in total startup funding over time from 1979-2015. 
+                            p("Here, we can see the oscillations in total startup funding over time from 1977-2015. 
                               I used a logarithmic scale to fit the values, as total funding increased exponentially 
                               from the late 1990s! It seems some of the values go under 0 between 1980 and 1995, but in reality they are
                               just hitting 0. The animation makes it appear as if goes below by obscuring the points with the axes.",
@@ -160,6 +161,19 @@ ui <- navbarPage(
                    like funneling talent, research, or capital, especially when there are very few startups in an area to begin with.", 
                    align = "center"),
                  br(),
+                 p("That being said, this regression provides a general view of a potential relationship that would need to be explored
+                   further. There were some key outliers in the dataset in terms of number of startups and number of higher educational 
+                   institutions, like California, New York, South Dakota, and West Virgina. I fit another regression line that does not 
+                   that excludes these outliers, as well as ran a nother regression. Here, we see the relationship between educational institutions
+                   and new startups as more 1-to-1.", 
+                   align = "center"),
+                 br(),
+                 fluidRow(
+                     column(8, 
+                            offset = 2,
+                            gt_output("clean_reg_gt"),
+                     )),
+                 br(),
                  fluidRow(
                      column(8, 
                             offset = 2,
@@ -172,51 +186,74 @@ ui <- navbarPage(
                  h1("About This Project", 
                     align = "center")),
              hr(),
-             h3("Project Motivations",
-                align = "center"),
-             p("After working at a startup last summer, I became interested in how startups functioned 
+             sidebarLayout(
+                 sidebarPanel(
+                     h3("Project Motivations",
+                                 align = "center")),
+                 mainPanel(
+                 p("After working at a startup last summer, I became interested in how startups functioned 
            and what factors made them successful. I came across various startup datasets online and 
-           became excited to see what insights I could find!", 
-               align = "center"),
-             h3("Data Sources",
-                align = "center"),
-             p("I obtained startup data from a Dec. 4, 2015 Crunchbase Data Export found here: 
-           https://github.com/notpeter/crunchbase-data. Specifically, I used two csv files: companies.csv (informattion
-           about startups founded betweeen 1977 and 2015) and investments.csv (records of funding rounds for each startup 
-           betweeen 1977 and 2015).",
-               align = "center"),
-             p("I obtained data on US higher educational institutions from the US Department of Homeland Security
-           here: https://hifld-geoplatform.opendata.arcgis.com/datasets/colleges-and-universities/data. I 
-           cleaned up extraneous columns in excel before loading into R.", align = "center"),
-             p("I also used a dataset from World Population Review to convert state abbreviations to names: https://worldpopulationreview.com/states/state-abbreviations/", 
-               align = "center"),
-             h3("Methodology",
-                align = "center"),
-             p("Much of my work went into organizing the data to make the visualization easier. Specifically, I had to separate and rejoin
+           became excited to see what insights I could find!"))), 
+             sidebarLayout(
+                 sidebarPanel(
+                     h3("Data Sources",
+                        align = "center", 
+                        style="padding:50px;")),
+                 mainPanel(
+                     p("I obtained startup data from a Dec. 4, 2015 Crunchbase Data Export found", 
+                       a(href = 'https://github.com/notpeter/crunchbase-data', 
+                         ' here', .noWS = "outside"),
+                         ". Specifically, I used two csv files: companies.csv (information about startups founded betweeen 1977 and 2015) 
+                       and investments.csv (records of funding rounds for each startup betweeen 1977 and 2015)."),
+                 p("I obtained data on US higher educational institutions from the US Department of Homeland Security found", 
+                   a(href = 'https://hifld-geoplatform.opendata.arcgis.com/datasets/colleges-and-universities/data', 
+                     ' here', .noWS = "outside"),
+                   ". I cleaned up 
+                   extraneous columns in excel before loading into R."),
+                 p("I also used a", 
+                   a(href = 'https://worldpopulationreview.com/states/state-abbreviations/', 
+                                      ' dataset from the World Population Review', 
+                                      .noWS = "outside"),
+                                      " to convert state abbreviations to names"))),
+             sidebarLayout(
+                 sidebarPanel(
+                     h3("Methodology",
+                           align = "center")),
+                     mainPanel(
+                     p("Much of my work went into organizing the data to make the visualization easier. Specifically, I had to separate and rejoin
            columns to organize the startup categories, as startups would often have more than one category (one even had 44). 
-           This  then anabled me to perform the rest of my analysis.", align = "center"),
-             h3("Conclusions",
-                align = "center"),
-             p("I learned a lot about what it takes to start and maintain a successful business. Location, industry, and 
+           This then enabled me to perform the rest of my analysis."))),
+             sidebarLayout(
+                 sidebarPanel(
+                     h3("Conclusions",
+                           align = "center")),
+                 mainPanel(
+                 p("I learned a lot about what it takes to start and maintain a successful business. Location, industry, and 
            timing are important. While these may seem like common knowledge, it was very eye-opening to generate these 
            insights through the data. By analyzing historical data trends, I was able to see how some industries have changed over
-           time as well as how geographical characteristics, like nearby colleges, matter.", 
-               align = "center"),
-             h3("Future Directions",
-                align = "center"),
-             p("There is still a lot that could be done to expand this project. For example, I could examine how regional factors
+           time as well as how geographical characteristics, like nearby colleges, matter."))),
+             sidebarLayout(
+                 sidebarPanel(
+                     h3("Future Directions",
+                        align = "center")),
+                 mainPanel(
+                 p("There is still a lot that could be done to expand this project. For example, I could examine how regional factors
            (like income or population) impact how many startups are founded, analyze where most startups get their
-           funding from by industry, or analyzing along more local levels than by state, to name a few.", align = "center"),
+           funding from by industry, running a regression on how educational institutions impact different industries,
+               or analyzing along more local levels than by state lines, to name a few."))),
+             hr(),
              h3("Acknowledgements",
                 align = "center"),
              p("Special thanks to Preceptor, my TF Kaneesha, and the Gov1005 teaching staff for equipping me
            with the tools to complete this project!", align = "center"),
              h3("About Me",
                 align = "center"),
-             p("My name is Belinda and I'm a junior studying History of Science. 
-         You can reach me at belindahu@college.harvard.edu.",
+             p("My name is Belinda and I'm a junior studying History of Science. You can reach me at belindahu@college.harvard.edu. 
+             I'm interested in startups, specifically relating to consumer products and sustainability!",
                align = "center"),
-             p("https://github.com/belindahu", 
-               align = "center")
+             p('This is my ', a(href = 'https://github.com/belindahu', 
+                                'Github', .noWS = "outside"), 
+               '.', 
+               .noWS = c("after-begin", "before-end"), align = "center")
              
     ))

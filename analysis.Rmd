@@ -163,7 +163,7 @@ top_ten <- investments2 %>%
   head(9)
 
 # writing this to shiny to plot top industries
-write_rds(top_ten, path = "Startups/top_ten.rds")
+write_rds(top_ten, path = "Shiny/top_ten.rds")
 
 # creating a gt table of top ten industries (there's really only 9 oops)
 # this is copied into shiny
@@ -199,7 +199,7 @@ nine_industries <- investments2 %>%
 
 # saving as rds to plot best cities - to be used for cities graphs
 
-write_rds(nine_industries, path = "Startups/nine_industries.rds")
+write_rds(nine_industries, path = "Shiny/nine_industries.rds")
 
 #  creating another dataset to track funding over time
 
@@ -210,7 +210,7 @@ ind_funding_over_time <- nine_industries %>%
 
 # writing this into shiny as well
 
-write_rds(ind_funding_over_time, path = "Startups/ind_funding_over_time.rds")
+write_rds(ind_funding_over_time, path = "Shiny/ind_funding_over_time.rds")
 
 # plotting funding over time with log scale, faceted by category/industry
 
@@ -349,7 +349,21 @@ full_colleges <- colleges %>%
 
 # writing data to shiny
 
-write_rds(full_colleges, path = "Startups/full_colleges.rds")
+write_rds(full_colleges, path = "Shiny/full_colleges.rds")
+
+# creating a new dataset without outliers by removing top and bottom 5
+# percentiles
+
+y <- quantile(full_colleges$startup_count,c(0.05,0.95), na.rm  = TRUE)
+x <- quantile(full_colleges$inst_count,c(0.05,0.95), na.rm  = TRUE)
+
+clean_full_colleges <- full_colleges %>% 
+  filter(startup_count >= y[1] & startup_count <= y[2]) %>% 
+  filter(inst_count >= x[1] & inst_count <= x[2])
+
+# writing into Shiny
+
+write_rds(clean_full_colleges, path = "Shiny/clean_full_colleges.rds")
 
 # creating the regression
 
@@ -366,10 +380,39 @@ inst_model <- full_colleges %>%
 inst_gt <- inst_model %>% 
   gt() %>% 
   tab_header(
-    title = "Effect of Number of Higher Level Institutions on Number of Startups Founded in 2011-2015
-",
-    subtitle = "Using College and University Data from US Dept. of Homeland Security
+    title = "Effect of Number of Higher Level Institutions on Number of New Startups, 2011-2015
 "
+  ) %>% 
+   cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower bound",
+    conf.high = "Upper bound"
+  ) %>% 
+  cols_align(
+    "center"
+  ) %>% 
+  tab_footnote(
+    footnote = "College and University Data from US Dept. of Homeland Security",
+    locations = cells_title("title"))
+
+# model without outliers, using clean_full_college
+
+clean_inst_model <- clean_full_colleges %>% 
+  lm(startup_count ~ inst_count, data = .) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, conf.low, conf.high) %>%
+  mutate(estimate = round(estimate, digits = 3), 
+         conf.low = round(conf.low, digits = 3), 
+         conf.high = round(conf.high, digits = 3))
+
+#gt table
+
+clean_inst_gt <- clean_inst_model %>% 
+  gt() %>% 
+  tab_header(
+    title = "Effect of Number of Higher Level Institutions on Number of New Startups, 2011-2015",
+    subtitle = "Removing Outliers below 5th and above 95th Percentile"
   ) %>% 
    cols_label(
     term = "Variable",
@@ -381,7 +424,7 @@ inst_gt <- inst_model %>%
     "center"
   )
 
-inst_gt
+clean_inst_gt
 
 ```
 
@@ -389,7 +432,8 @@ inst_gt
 
 ```{r visualizing reg, echo = FALSE}
 
-# creating a ggplot of the regression that yielded more results
+# creating a ggplot of the regression that yielded more results.  adding in a
+# line for outliers
 
 reg_plot <- full_colleges %>% 
   na.omit() %>% 
@@ -399,11 +443,14 @@ reg_plot <- full_colleges %>%
   labs(title = "Relationship between number of higher instituions and number of new startups",
        subtitle = "2011-2015, each point represents a state",
        x = "Number of Higher Institutions",
-       y = "Number of Startups Founded")
+       y = "Number of Startups Founded") +
+  geom_smooth(data = clean_full_colleges, method = "lm", se = FALSE, color = "red")
+
+reg_plot
 
 # saving as png
 
-ggsave("reg_plot.png", plot = reg_plot, path = "Startups")
+ggsave("reg_plot.png", plot = reg_plot, path = "Shiny")
 
 ```
 
