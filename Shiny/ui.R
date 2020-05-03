@@ -23,6 +23,9 @@ top_ten <- read_rds("top_ten.rds")
 full_colleges <- read_rds("full_colleges.rds")
 ind_funding_over_time <- read_rds("ind_funding_over_time.rds")
 
+# NOTE: throughout this file, I blocked the text into more readable chunks by entering
+# a new line when the line got too long
+
 # Define UI for application 
 
 ui <- navbarPage(
@@ -30,6 +33,9 @@ ui <- navbarPage(
     # INTRO / TOP INDUSTRY PAGE
     
     "How Startups Can Thrive in the US",
+    
+    # first tab, setting theme to DARKLY, and outlining the titlePanel and
+    # mainPanel, adding in spacing using fluidRow
     
     tabPanel("Introduction",
              fluidPage(theme = shinytheme("darkly"),
@@ -50,12 +56,13 @@ ui <- navbarPage(
                      column(6,
                             offset = 3,
                             gt_output("industries_plot")
-                     )),
+                     )
+                     ),
                  br(),
                  p("To understand which industries received the most aggregate funding, I 
                               grouped the funding data by category (industry) and arranged in descending
-                              order by total funding. It's not surprising that biotech, software, and mobile come out
-                              at the top!", 
+                              order by total funding. It's not surprising that biotech, software, 
+                              and mobile come out at the top!", 
                    align = "center"),
                  hr(),
                  h2("Total Funding Over Time", 
@@ -70,13 +77,20 @@ ui <- navbarPage(
                      column(5, 
                             p("Here, we can see the oscillations in total startup funding over time from 1977-2015. 
                               I used a logarithmic scale to fit the values, as total funding increased exponentially 
-                              from the late 1990s! It seems some of the values go under 0 between 1980 and 1995, but in reality they are
-                              just hitting 0. The animation makes it appear as if goes below by obscuring the points with the axes.",
-                              
-                              style="padding:60px;"))
+                              from the late 1990s! It seems some of the values go under 0 between 1980 and 1995,
+                              but in reality they are just hitting 0. The animation makes it appear as if goes below 
+                              by obscuring the points with the axes.",
+                              style="padding:60px;")
+                            )
                  ),
                  br()
-             )),
+             )
+             ),
+    
+    # TOP INDUSTRIES PAGE
+    
+    # outlining the titlePanel and mainPanel, adding in spacing using
+    # fluidRow, adding in descriptions of graphics
     
     tabPanel("Top Industries",
              fluidPage(
@@ -90,15 +104,30 @@ ui <- navbarPage(
                                        "plot_type",
                                        "Plot Type",
                                        c("Normal Scale" = "a", "Logarithmic Scale" = "b")
-                                   )),
+                                   )
+                                   ),
                                mainPanel(plotOutput("ind_funding_over_time"))
                  ),
                  hr(),
                  p("I plotted funding trends for each of the top 9 industries using both a normal y scale and a 
                    logarithmic y scale. Using the log scale allows us to account for any skewedness towards larger values,
-                   as investments for these industries began to increase significantly in the late 1990s.",
-                   align = "center")
-             )),
+                   as investments for these industries began to increase significantly in the late 1990s. Here, we see 
+                   that industries like Software and Biotechnology have achieved rapid growth in recent decades,
+                   while Clean Technology and Advertising are slowing down.",
+                   align = "center"),
+                 br(),
+                 p("Fun fact: the singular pre-1980 point for Enterprise Software represents ABO Data, which is a consulting
+                   company for projects on Big Data, IoT, and Analytics today. It was founded in 1979, which was when it received its
+                   first investment, for software and research development. Evidently, enterprise software was not a distinct 
+                   industry back then, but after researching the company, it seems to have evolved into more of an enterprise 
+                   software company (providing software services for organizations instead of individual consumers) over time.")
+             )
+             ),
+    
+    # TOP CITIES PAGE
+    
+    # outlining the titlePanel and mainPanel, defining sidebarPanel,
+    # writing explanations of graphics
     
     tabPanel("Top Cities",
              fluidPage(
@@ -113,16 +142,35 @@ ui <- navbarPage(
                              "industries",
                              "Industries",
                              levels(nine_industries$category)
-                         )),
+                         )
+                         ),
                      mainPanel(
                          textOutput("selected_industry"),
                          plotOutput("cities_plot"))
                  ),
+                 br(),
+                 p("I grouped the funding data out by cities for each of the top 9 industries.
+                   This allows us to see in which cities startups have historically raised the most money.",
+                   align = "center"),
                  hr(),
-                 p("I grouped the funding data out by cities for each of the top 9 industries. This allows us to see in which
-                   cities startups have historically raised the most money.",
+                 h3("Key Takeaways", align = "center"),
+                 br(),
+                 p("Industies like Clean Technology, Enterprise Software, and Software find most of their funding on specific coasts,
+                   in this case, the West Coast. Biotechnology and Health Care find most of their funding in 
+                   the Boston/Cambridge area. Interestingly, much of the Mobile funding comes from Kirkland, WA. 
+                   A quick scan of the data shows that Clearwire, a telecom operator in the Seattle area, 
+                   received significant funding before its acquisition by Sprint Nextel. For other industries, like
+                   Advertising, E-Commerce and Internet, the top cities ae more dispersed between the East and West Coasts,
+                   as well as the Midwest.",
                    align = "center")
-             )), 
+             )
+             ), 
+    
+    # EDUCATION / REGRESSION PAGE
+    
+    # formatting the various panels to not be too overwhelming,
+    # inserting graphics, aligning p blocks, inserting spaces like hr() and br()
+    # when necessary
     
     tabPanel("Education",
              fluidPage(
@@ -152,11 +200,12 @@ ui <- navbarPage(
                      column(8, 
                             offset = 2,
                             gt_output("reg_gt"),
-                     )),
+                     )
+                     ),
                  br(),
                  p("As the regression shows, there is a relationship between the number of institutions within state borders and 
-                 the number of startups founded in this time period. The inst_count estimate indicates that for every additional higher ed institution, there is
-                   approximately 4 new startups founded. Moreover, because the intercept is so negative, this 
+                 the number of startups founded in this time period. The inst_count estimate indicates that for every additional 
+                   higher ed institution, there is approximately 4 new startups founded. Moreover, because the intercept is so negative, this 
                    may be indicative of how important higher education institutions are in promoting new startups, 
                    like funneling talent, research, or capital, especially when there are very few startups in an area to begin with.", 
                    align = "center"),
@@ -164,22 +213,31 @@ ui <- navbarPage(
                  p("That being said, this regression provides a general view of a potential relationship that would need to be explored
                    further. There were some key outliers in the dataset in terms of number of startups and number of higher educational 
                    institutions, like California, New York, South Dakota, and West Virgina. I fit another regression line that does not 
-                   that excludes these outliers, as well as ran a nother regression. Here, we see the relationship between educational institutions
-                   and new startups as more 1-to-1.", 
+                   that excludes these outliers, as well as ran a nother regression. Here, we see the relationship between educational 
+                   institutions and new startups as more 1-to-1.", 
                    align = "center"),
                  br(),
                  fluidRow(
                      column(8, 
                             offset = 2,
                             gt_output("clean_reg_gt"),
-                     )),
+                     )
+                     ),
                  br(),
                  fluidRow(
                      column(8, 
                             offset = 2,
                             plotOutput("reg_plot"),
-                     ))
-             )),
+                     )
+                     )
+             )
+             ),
+    
+    # ABOUT PAGE
+    
+    # formatting the various panels to not be too overwhelming,  using sidebar
+    # to create a more readable, adjusting height of sidebar using padding,
+    # inserting hyperlinks when necessary
     
     tabPanel("About",
              titlePanel(

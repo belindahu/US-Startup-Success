@@ -34,13 +34,20 @@ server <- function(input, output, session) {
              contentType = 'image/gif',
              alt = "This is an animation",
              width = 400,
-             height = 400)
-    }, deleteFile = FALSE)
+             height = 400)}, 
+    deleteFile = FALSE)
+    
+    # total funding over time plot, logarithmic and normal scale
+    # using pre-loaded ind_funding_over_time data
     
     output$ind_funding_over_time <- renderPlot({
         
+        # basing input off of what user chooses in dropdown bar
+        
         ifelse(
             input$plot_type == "a",
+            
+            # generating ggplot based off of user selection - normal scale
             
             a <- ind_funding_over_time %>%
                 ggplot(., aes(x = funding_year, y = total, color = category)) +
@@ -52,7 +59,9 @@ server <- function(input, output, session) {
                      x = "Year",
                      y = "Funding (Billion USD)"),
             
-            a <- ind_funding_over_time%>% 
+            # generating ggplot based off of user selection - log scale
+            
+            a <- ind_funding_over_time %>% 
                 ggplot(., aes(x = funding_year, y = total, color = category)) +
                 facet_wrap(~category) +
                 geom_point(show.legend = FALSE) +
@@ -68,7 +77,11 @@ server <- function(input, output, session) {
         
     })
     
+    # top cities per industry plot using pre-loaded nine_industries data
+    
     output$cities_plot <- renderPlot({
+        
+        # dynamic plotting using input$industries 
         
         plot <- nine_industries %>% 
             filter(category == input$industries) %>%
@@ -91,11 +104,15 @@ server <- function(input, output, session) {
         
     })
     
+    # adjusting the title of each plot based off of industry selected in dropdown menu
+    
     output$selected_industry <- renderText({ 
         
         paste("Top 10 US Cities for", input$industries, "Funding")
         
     })
+    
+    # outputting top industries gt table using loaded in top_ten data
     
     output$industries_plot <- render_gt({
         
@@ -119,6 +136,8 @@ server <- function(input, output, session) {
         gt
     })
     
+    # outputting the regresing gt table using pre-loaded full_colleges data
+    
     output$reg_gt <- render_gt({
         
         inst_model <- full_colleges %>% 
@@ -128,6 +147,8 @@ server <- function(input, output, session) {
             mutate(estimate = round(estimate, digits = 3), 
                    conf.low = round(conf.low, digits = 3), 
                    conf.high = round(conf.high, digits = 3))
+        
+        # using inst_model to create and print the gt table
         
         inst_gt <- inst_model %>% 
             gt() %>% 
@@ -147,6 +168,9 @@ server <- function(input, output, session) {
         
         inst_gt
     })
+    
+    # outputting cleaned up gt table using pre-loaded clean_full_colleges data,
+    # tidying up data, and printing gt table
     
     output$clean_reg_gt <- render_gt({
         
@@ -175,15 +199,19 @@ server <- function(input, output, session) {
             )
     })
     
+    # plotting the regression by using image saved using ggsave and loaded into
+    # Shiny folder
+    
     output$reg_plot <- renderImage({
         
         # Return a list containing the filename, alt text, and sizing
+        
         list(src = "reg_plot.png",
              contentType = 'image/png',
              alt = "This is an image",
              width = 850,
              height = 800,
-             style = "display: block; margin-left: auto; margin-right: auto;")
-    }, deleteFile = FALSE)
+             style = "display: block; margin-left: auto; margin-right: auto;")}, 
+        deleteFile = FALSE)
     
 }

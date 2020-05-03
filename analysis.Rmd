@@ -58,6 +58,8 @@ investments <- read_csv("raw-data/investments.csv") %>%
   mutate(funding_year = as.numeric(format(funded_at, "%Y"))) %>% 
   mutate(raised_amount_usd = raised_amount_usd/1000000)
 
+investments %>% filter(funding_year < 1980) %>% filter(company_category_list == "Enterprise Software")
+
 ```
 
 # Exploratory Analysis of Data
